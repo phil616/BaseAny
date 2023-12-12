@@ -9,7 +9,7 @@ def decode(char_data:str)->bytes:
     reverse_dict = codec.bacl.get_reverse_dict()
     int_sequence = [reverse_dict[c] for c in char_data]
     reverse_padding_dict = {v:k for k,v in codec.padding_dict.items()}
-    print("reverse_padding_dict",reverse_padding_dict)
+
     padding_char = codec.bacl[int_sequence[-1]]
 
 

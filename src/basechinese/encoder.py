@@ -16,16 +16,16 @@ def encode(bytes_data: bytes) -> str:
     combined_binary_string = "".join(binary_strings)
     # original binary sequence
     binary_sequence = combined_binary_string
-    print("original bin seq:\n",binary_sequence)
+
     len_of_bs = len(binary_sequence)
-    print("len_of_bs", len_of_bs)
+
     group_size = codec.AD
     padding_numbers = group_size - len_of_bs % codec.bacl.get_available_digits()
     # we need extra padding_numbers' zeros
-    print("padding_numbers", padding_numbers)
+
     binary_sequence = binary_sequence + "0" * padding_numbers
     last_padding_char = codec.padding_dict[padding_numbers]
-    print("tri\n",binary_sequence)
+
 
     ret_seq = []
     groups = [

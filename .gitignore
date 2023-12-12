@@ -3,3 +3,5 @@
 .vscode/
 .cfg
 *.log
+
+result.json # viztracer result file

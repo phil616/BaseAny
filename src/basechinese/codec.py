@@ -1,5 +1,11 @@
 
+"""
 
+The codec module contains the Codec class and the load_info function
+
+user can override the bacl.txt path file here
+
+"""
 
 from basechinese.bacl import BACL
 import os
@@ -8,6 +14,18 @@ SRC_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BACL_PATH = os.path.join(SRC_PATH,"bacl.txt")
 
 class Codec:
+    """
+    Codec is a class that contains all the information about the encoding and decoding process
+    
+    In fact, it is a return type of the load_info function
+    
+    Attributes:
+        AD (int): the number of available digits
+        PC (int): the number of padding chars
+        padding_dict (dict): the dict of padding chars
+        bacl (BACL): the BACL object
+    
+    """
     AD:int
     PC:int
     padding_dict:dict
@@ -19,6 +37,11 @@ class Codec:
         self.bacl = bacl
 
 def load_info(path:os.PathLike=None)->Codec:
+    """
+    load the information from the bacl.txt file
+    Returns:
+        Codec: the Codec object
+    """
     if path is None:
         path = BACL_PATH
     with open(path, "r", encoding="utf8") as f:
