@@ -48,7 +48,7 @@ class BACL(dict):
             self[index] = char
 
     def _precheck(self):
-        """precheck the string"""
+        """precheck the BACL"""
         checking_sequence: list[callable] = [
             check_isprintable,
             check_duplicates,

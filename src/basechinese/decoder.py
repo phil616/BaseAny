@@ -4,7 +4,7 @@ from basechinese.exceptions import InputTypeException
 def decode(char_data:str)->bytes:
 
     if not isinstance(char_data,str):
-        raise InputTypeException("The input data should be str")
+        raise InputTypeException(type(char_data),"The input data should be str")
     codec = load_info()
     reverse_dict = codec.bacl.get_reverse_dict()
     int_sequence = [reverse_dict[c] for c in char_data]

@@ -9,7 +9,7 @@ from basechinese.exceptions import InputTypeException
 
 def encode(bytes_data: bytes) -> str:
     if not isinstance(bytes_data, bytes):
-        raise InputTypeException("The input data should be bytes")
+        raise InputTypeException(type(bytes_data),"The input data should be bytes")
     codec = load_info()
 
     binary_strings = ["{:08b}".format(byte) for byte in bytes_data]
