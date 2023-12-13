@@ -1,8 +1,7 @@
-# BaseChinese
+# BaseAny
 
-A project to convert Chinese characters and binary data to and from each other.
+A project to convert any characters and binary data to and from each other. like base64
 
-In theory, this project can convert any character set into binary encoding, not limited to Chinese characters. Just replace bacl to achieve any encoding.
 
 ## Usage
 
