@@ -1,3 +1,6 @@
+"""
+
+"""
 import math
 from typing import Sequence
 
@@ -8,24 +11,84 @@ CODE_PAGE = "一二三四五六七八九十"  # CODEPAGE can be replaced to any 
 
 bytes_types = (bytes, bytearray)  # Types acceptable as binary data
 
+class BaseAnyException(Exception):
+    ...
 
-def bin2strseq(bytes_data, split=""):
+class InvaildLengthException(BaseAnyException):
+    def __init__(self, mode, minimum:int):
+        self.minimum = minimum
+        self.mode = mode
+        self.messages = f"in {self.mode} mode, for length of CODE_PAGE, {self.minimum} is required"
+        super().__init__(self.messages)
+
+class DuplicationException(BaseAnyException):
+    def __init__(self,duplications):
+        self.duplications = duplications
+        self.messages = f"duplications detected: {duplications}"
+        super().__init__(self.messages)
+
+class UnPrintableException(BaseAnyException):
+    def __init__(self,unprintables):
+        self.unprintables = unprintables
+        self.messages = f"unprintable characters detected: {unprintables}"
+        super().__init__(self.messages)
+
+def bin2strseq(bytes_data, split="")->list[str]:
+    """
+    convert binary sequence data to string sequence 
+    Args:
+        bytes_data: bytes binary sequence
+        split: str split char
+    Returns:
+        str sequence
+    Examples:
+        >>> bin2strseq(b'\x01\x02\x03')
+        '000000010000001000000011'
+        >>> bin2strseq(b'\x01\x02\x03',split=' ')
+        '00000001 00000010 00000011'
+    """
     if not isinstance(bytes_data, bytes_types):
         raise TypeError(f"The input data should be {bytes_types}")
     return split.join(f"{byte:08b}" for byte in bytes_data)
 
 
-def strseq2bin(strseq):
+def strseq2bin(strseq:str)->bytes:
+    """
+    convert string sequence to binary
+    Args:
+        strseq: str sequence
+    Returns:
+        bytes binary sequence
+    Examples:
+        >>> strseq2bin('000000010000001000000011')
+        b'\x01\x02\x03'
+    """
     if not isinstance(strseq, str):
         raise TypeError(f"The input data should be str instead of {type(strseq)}")
     return bytes(int(strseq[i : i + 8], 2) for i in range(0, len(strseq), 8))
 
 
-def splitseq_by_len(seq: Sequence, length: int):
+def splitseq_by_len(seq: Sequence, length: int)->list[str]:
+    """
+    split a sequence in a specific length
+    Args:
+        seq: the sequence to split
+        length: the length to split
+    Returns:
+        a list of sequence
+    Examples:
+        >>> splitseq_by_len('000000010000001000000011',4)
+        ['0000','0001','0000','0010','0000','0011']
+    """
     return [seq[i : i + length] for i in range(0, len(seq), length)]
 
 
 def check_CPN_available(s: str) -> None:
+    """
+    Check counting padding number mode is available
+    Args:
+        s (str): the string to check
+    """
     STRING_LENGTH = len(s)
     log_ret = math.log2(STRING_LENGTH)
     available_digits = math.floor(log_ret)
@@ -34,17 +97,22 @@ def check_CPN_available(s: str) -> None:
     CPN = padding_chars
 
     if CPN + 2**AD > STRING_LENGTH:
-        raise Exception("The string length is not available")
+        raise InvaildLengthException("CPN", CPN + 2**AD)
 
 
 def check_APN_available(s: str) -> None:
+    """
+    Check alignment padding number mode is available
+    Args:
+        s (str): the string to check
+    """
     STRING_LENGTH = len(s)
     log_ret = math.log2(STRING_LENGTH)
     available_digits = math.floor(log_ret)
     AD = available_digits
     APN = 1
     if APN + 2**AD > STRING_LENGTH:
-        raise Exception(message="The string length is not available")
+        raise InvaildLengthException("APN", APN + 2**AD)
 
 
 def check_duplicates(s: str) -> None:
@@ -70,7 +138,7 @@ def check_duplicates(s: str) -> None:
         else:
             char_indices[char] = index
     if duplicates:
-        raise Exception(duplicates)
+        raise DuplicationException(duplicates)
 
 
 def check_isprintable(s: str) -> None:
@@ -89,11 +157,56 @@ def check_isprintable(s: str) -> None:
         if not char.isprintable():
             non_printable.append((index, repr(char)))
     if non_printable:
-        raise Exception(non_printable, "The string contains unprintable characters")
+        raise UnPrintableException(non_printable)
 
 
 class MappingList(list):
+    """
+    MappingList class is a list to storage and transform the code page
+
+    Args:
+        mapping_list: the code page to use
+        mode: the mode to use, CPN or APN
+
+    Attributes:
+        length: the length of the code page
+        mapping: a dict to map index to char
+        reverse_mapping: a dict to map char to index
+        information_entropy: the information entropy of the code page
+        available_digits: the available digits of the code page
+        _max_border: the max border of the code page
+        APN_char: the alignment padding number char
+        _min_used_length: the minimum used length of the code page
+        CPN_chars: the counting padding number chars
+
+    Raises:
+        Exception: if the mode is not CPN or APN
+
+    Examples:
+        >>> ML = MappingList(CODE_PAGE, mode="CPN")
+        >>> ML.length
+        16
+        >>> ML.mapping
+        {0: '一', 1: '二', 2: '三', 3: '四', 4: '五', 5: '六', 6: '七', 7: '八', 8: '九', 9: '十', 10: '一', 11: '二', 12: '三', 13: '四', 14: '五', 15: '六'}
+        >>> ML.reverse_mapping
+        {'一': 10, '二': 11, '三': 12, '四': 13, '五': 14, '六': 15, '七': 6, '八': 7, '九': 8, '十': 9}
+        >>> ML.information_entropy
+        4.0
+        >>> ML.available_digits
+        4
+        >>> ML._max_border
+        16
+        >>> ML.APN_char
+        '一'
+        >>> ML._min_used_length
+        19
+        >>> ML.CPN_chars
+        '二三四五六七八九十'
+    """
     def __init__(self, mapping_list: str, mode: str = "CPN"):
+        """
+        init method can init the list and check if the mapping list is avaliable
+        """
         self.mode = mode
         if mode == "CPN":
             check_CPN_available(mapping_list)
@@ -145,6 +258,7 @@ class MappingList(list):
 
 
 def anyencode(bytes_data: bytes, mode="CPN") -> str:
+    """anyencode encode bytes data to string"""
     ML = MappingList(CODE_PAGE, mode=mode)
     if not isinstance(bytes_data, bytes_types):
         raise TypeError(f"The input data should be {bytes_types}")
@@ -182,6 +296,7 @@ def anyencode(bytes_data: bytes, mode="CPN") -> str:
 
 
 def anydecode(char_data: str, mode="CPN") -> bytes:
+    """anydecode decode a string to bytes"""
     ML = MappingList(CODE_PAGE, mode=mode)
     if not isinstance(char_data, str):
         raise TypeError(f"The input data should be str instead of {type(char_data)}")
