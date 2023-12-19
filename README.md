@@ -42,3 +42,7 @@ Apache License 2.0
 
 - [Base64](https://en.wikipedia.org/wiki/Base64)
 - [Base85](https://en.wikipedia.org/wiki/Ascii85)
+
+## Bugs
+
+- [ ] `baseany` module can not parse `!` chars when code page were chinese like bacl, more for `src/baseany/bugs.py` - NOT FIXED
